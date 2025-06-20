@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,23 +7,96 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
+import { LuLoaderCircle } from "react-icons/lu";
 import type { Screen } from "@/pages/Index";
+import axios from 'axios';
+import { useDebounce } from 'react-use';
 
 interface ExtractionFormProps {
   onNavigate: (screen: Screen) => void;
 }
 
 export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(""); //Url input by user in form
+  const [debouncedUrl, setDebouncedUrl] = useState(url); //Debounced Url input by user in form
   const [enableOCR, setEnableOCR] = useState(true);
   const [includeTranscripts, setIncludeTranscripts] = useState(false);
+  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState('');
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
 
+  //debounce url input
+  useDebounce(() => {
+    setDebouncedUrl(url);
+  }, 300, [url]);
+
+  useEffect(() => {
+    setIsLoadingThumbnail(true);
+    const loadThumbnail = async () => {
+      await checkYoutubeVideo(debouncedUrl);
+      setIsLoadingThumbnail(false);
+    }
+    loadThumbnail();
+
+  },[debouncedUrl]);
+  //-------------------------------------------
+
+  //YOUTUBE API ------------------------------
+  const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+  const YOUTUBE_API_KEY = 'AIzaSyBMNPZADdREur3VdkR87ccIlEaqNgu8smo';
+  const VIDEO_ENDPOINT = '/videos';
+  const checkYoutubeVideo = async (url:string) => { //Checks if video exists and updates thumbnail preview
+    if (!url) return;
+    try{
+    const youtubeUrlObj = new URL(url);
+    const youtubeVideoID = youtubeUrlObj.searchParams.get('v')
+    console.log(`video ID: ${youtubeVideoID}`);
+    const res = await axios.get(`${YOUTUBE_API_BASE_URL}${VIDEO_ENDPOINT}`, {
+        params: {
+        part: 'snippet',
+        id: youtubeVideoID,
+        key: YOUTUBE_API_KEY
+    }
+    })
+      .then(res => {
+        console.log(res.data);
+
+        const snippet = res.data.items[0].snippet;
+        const thumbnail_url = snippet.thumbnails.high.url;
+        setVideoThumbnailUrl(thumbnail_url);
+      })
+    } catch (error) { 
+      setVideoThumbnailUrl('');
+    }
+  }
+  //--------------------------------------------
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (url.trim()) {
       onNavigate('progress');
     }
   };
+
+  //Create session JSON object
+
+    //EXTRACT FRAMES ----------------------------
+  const extractFrames = async () => {
+    await axios.post('http://localhost:3000/video/extract', {
+       videoPath:'tmp/video.mp4', //VIDEO NAME HARDCODED. NEED TO FIX MAYBE
+       outputDir:'frames'
+    });
+  }
+
+  const downloadVideo = e => {
+    e.preventDefault(); // ← stops the default form reload
+    axios.post('http://localhost:3000/download/video', { url }) //{url} shorthand for {url:url}
+    .then(async () => {
+      await extractFrames(); // /video/extract endpoint
+    })
+    .then(async () => {
+      await axios.post('http://localhost:3000/video/filter');
+    })
+    .catch(err => console.error(err));
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -48,7 +121,7 @@ export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
           </div>
 
           <Card className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={downloadVideo} className="space-y-6">
               <div>
                 <Label htmlFor="url" className="text-base font-medium">
                   Video or Playlist URL
@@ -66,6 +139,16 @@ export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
                   Supports YouTube videos and playlists, Vimeo, and other major platforms
                 </p>
               </div>
+
+              {
+              isLoadingThumbnail ? 
+              <LuLoaderCircle className="animate-spin text-4xl"/> :
+              <div className="flex">
+                <img className="w-36" src={videoThumbnailUrl || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"} alt="" />
+              </div>
+              }
+
+
 
               <div className="space-y-6 pt-4">
                 <div className="flex items-center justify-between">
