@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url'; 
 import { PNG } from 'pngjs';
+import pool from '../db.js';
 
 const router = Router();
 
@@ -24,14 +25,13 @@ const extractFrames = (videoPath:string, outputDir:string) => {
 };
 //--------------------------------------------
 
-const extractGalleryFrames = async (framesDir, diffThreshold=1000) => {
+const extractGalleryFrames = async (framesDir, galleryDir, diffThreshold=1000) => {
     console.log("Filtering Frames to Gallery...");
     const files = fs.readdirSync(framesDir) //read all files in frame directory that end with ".png"
         .filter(f => f.endsWith('png'))
         .sort(); //ensures frame_001.png, frame_002.png, ... 
 
     const galleryFramePaths:string[] = []; //Store frames only featured in gallery
-    const galleryDirPath = path.resolve(__dirname, '..', 'gallery');
 
     for (let i = 1; i < files.length; i++){
         const prevPath = path.join(framesDir, files[i - 1]);
@@ -59,7 +59,7 @@ const extractGalleryFrames = async (framesDir, diffThreshold=1000) => {
         if (numDiffPixels > diffThreshold){
             console.log(`Large change detected; frame ${currPath} saved`)
             galleryFramePaths.push(currPath) //Push frame path to gallery array
-            fs.writeFileSync(`${galleryDirPath}/galleryFrame${i}.png`, PNG.sync.write(currImage)); //path to save to, and PNG data to save. takes currImage object and encodes it into a proper PNG file
+            fs.writeFileSync(`${galleryDir}/galleryFrame${i}.png`, PNG.sync.write(currImage)); //path to save to, and PNG data to save. takes currImage object and encodes it into a proper PNG file
         }
     }
 
@@ -68,20 +68,30 @@ const extractGalleryFrames = async (framesDir, diffThreshold=1000) => {
 
 //Extract frames from video
 router.post('/extract', async (req, res) => {
-    //__dirname just points to the backend folder, which nodejs finds out at runtime, from the folder where your main .ts backend file resides 
-    const videoPath = path.resolve(__dirname , '..', req.body.videoPath); // video storage folder
-    const outputDir = path.resolve(__dirname , '..', req.body.outputDir); // frame output folder
+    console.log("[SERVER]</video/extract> Extracting all frames from video...");
+
+    const {sessionID, tmp, frames, gallery} = req.body;
+    
+    const videoPath = path.join(tmp,"video.mp4");
+    const outputDir = path.resolve(frames);
+
     await extractFrames(videoPath, outputDir);
-    res.status(200).json({ message: 'Frames extracted successfully' });
+    res.status(200).json({ message: 'Frames extracted successfully', sessionID, tmp, frames, gallery});
 })
 
 //Read all stored frames and filter into gallery
 router.post('/filter', async (req, res) => {
+    const {sessionID, tmp, frames, gallery} = req.body;
+
     console.log('Filter endpoint triggered');
+    console.log("[SERVER]</video/filter> Filtering useful frames...");
     try {
-        const framesDir = path.resolve(__dirname, '..', 'frames');
-        const slides = await extractGalleryFrames(framesDir);
+        const slides = await extractGalleryFrames(frames, gallery); //returns array of paths to slides
         res.json({ slides });
+
+        //UPDATE STATUS IN DATABASE --- COMPLETED
+        const dbRes = await pool.query('UPDATE extraction SET status = $1 WHERE extraction_id = $2', ['completed', sessionID] );
+        
     } catch (err){
         console.error(err);
         res.status(500).json({ error: 'Failed to filter frames' });

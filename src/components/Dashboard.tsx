@@ -5,47 +5,71 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Play, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import type { Screen } from "@/pages/Index";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Gallery from "./Gallery";
 
 interface DashboardProps {
   onNavigate: (screen: Screen) => void;
 }
 
-const mockExtractions = [
-  {
-    id: 1,
-    title: "React Masterclass - Complete Course",
-    thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop",
-    date: "2024-06-15",
-    status: "completed" as const,
-    slideCount: 47
-  },
-  {
-    id: 2,
-    title: "Advanced TypeScript Patterns",
-    thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=225&fit=crop",
-    date: "2024-06-14",
-    status: "processing" as const,
-    slideCount: 23
-  },
-  {
-    id: 3,
-    title: "UI/UX Design Principles",
-    thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop",
-    date: "2024-06-13",
-    status: "completed" as const,
-    slideCount: 32
-  },
-  {
-    id: 4,
-    title: "Database Design Workshop",
-    thumbnail: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=225&fit=crop",
-    date: "2024-06-12",
-    status: "failed" as const,
-    slideCount: 0
-  }
-];
+// const mockExtractions = [
+//   {
+//     id: 1,
+//     title: "React Masterclass - Complete Course",
+//     thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop",
+//     date: "2024-06-15",
+//     status: "completed" as const,
+//     slideCount: 47
+//   },
+//   {
+//     id: 2,
+//     title: "Advanced TypeScript Patterns",
+//     thumbnail: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=225&fit=crop",
+//     date: "2024-06-14",
+//     status: "processing" as const,
+//     slideCount: 23
+//   },
+//   {
+//     id: 3,
+//     title: "UI/UX Design Principles",
+//     thumbnail: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop",
+//     date: "2024-06-13",
+//     status: "completed" as const,
+//     slideCount: 32
+//   },
+//   {
+//     id: 4,
+//     title: "Database Design Workshop",
+//     thumbnail: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=225&fit=crop",
+//     date: "2024-06-12",
+//     status: "failed" as const,
+//     slideCount: 0
+//   }
+// ];
+
 
 export const Dashboard = ({ onNavigate }: DashboardProps) => {
+
+  const [extractions, setExtractions] = useState([]);
+  const [selectedCardId, setSelectedCardId] = useState('');
+  
+  useEffect(() => {
+    fetchExtractions(); // immediate fetch on mount
+    const interval = setInterval(() => {
+      fetchExtractions();
+    }, 3000); // every 3 seconds
+    
+    return () => clearInterval(interval); // cleanup
+  }, []);
+
+
+  const fetchExtractions = async () => {
+    const res = await axios.get('http://localhost:3000/session/get-sessions');
+    setExtractions(res.data);
+  }
+
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -71,14 +95,16 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
               <p className="text-gray-600">Manage your video extractions</p>
             </div>
           </div>
+          <button onClick={() => setSelectedCardId('')}> Back </button>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockExtractions.map((extraction) => (
-              <Card key={extraction.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            { !(selectedCardId) ? (
+            extractions && extractions.length > 0 ? 
+            extractions.map((extraction) => (
+              <Card onClick={() => setSelectedCardId(extraction.extraction_id)} key={extraction.extraction_id} className="cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="aspect-video bg-gray-200 relative overflow-hidden">
                   <img 
-                    src={extraction.thumbnail} 
-                    alt={extraction.title}
+                    src={extraction.thumbnail_path} 
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -88,12 +114,12 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
                 
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {extraction.title}
+                    {extraction.video_title}
                   </h3>
                   
                   <div className="flex items-center text-sm text-gray-500 mb-3">
                     <Calendar className="w-4 h-4 mr-1" />
-                    {new Date(extraction.date).toLocaleDateString()}
+                    {new Date(extraction.date_created).toLocaleDateString()}
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -112,7 +138,9 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
                   </div>
                 </div>
               </Card>
-            ))}
+            )) : <p>No Extractions found</p> ) : (
+            <Gallery id = {selectedCardId} /> )
+          }
           </div>
         </div>
       </div>
