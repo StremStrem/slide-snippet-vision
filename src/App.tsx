@@ -6,9 +6,20 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
+import {useEffect, useState} from "react";
+import {getAuth, onAuthStateChanged, User, signOut} from "firebase/auth";
+import {auth} from "../src/lib/firebase";
+import { AuthProvider } from "./components/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const [user, setUser] = useState<User | null>(null);
+
+
+  return (
+  <AuthProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -22,6 +33,8 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  </AuthProvider>
+  )
+};
 
 export default App;

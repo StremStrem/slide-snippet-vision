@@ -4,12 +4,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Home, Play, Settings, HelpCircle, ChevronDown } from "lucide-react";
 import type { Screen } from "@/pages/Index";
 
+import { AuthProvider, useAuth } from './AuthContext';
+import { useContext } from "react";
+
 interface SidebarProps {
   onNavigate: (screen: Screen) => void;
   currentScreen: Screen;
 }
 
 export const Sidebar = ({ onNavigate, currentScreen }: SidebarProps) => {
+  const { user, logOut } = useAuth();
+
   const navItems = [
     { id: 'dashboard' as Screen, label: 'Home', icon: Home },
     { id: 'extraction' as Screen, label: 'Extractions', icon: Play },
@@ -57,6 +62,17 @@ export const Sidebar = ({ onNavigate, currentScreen }: SidebarProps) => {
             Help
           </Button>
         </div>
+
+        <div className="mt-1">
+          <Button
+            onClick={logOut}
+            variant="ghost"
+            className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          >
+            <HelpCircle className="w-4 h-4 mr-3" />
+            Sign Out
+          </Button>
+        </div>
       </nav>
 
       {/* User Profile */}
@@ -66,8 +82,8 @@ export const Sidebar = ({ onNavigate, currentScreen }: SidebarProps) => {
             <AvatarFallback className="bg-blue-100 text-blue-900">JD</AvatarFallback>
           </Avatar>
           <div className="flex-1 text-left">
-            <div className="text-sm font-medium text-gray-900">John Doe</div>
-            <div className="text-xs text-gray-500">john@example.com</div>
+            <div className="text-sm font-medium text-gray-900">{user?.displayName}</div>
+            <div className="text-xs text-gray-500">{user?.email}</div>
           </div>
           <ChevronDown className="w-4 h-4 text-gray-400" />
         </Button>

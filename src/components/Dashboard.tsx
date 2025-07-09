@@ -8,6 +8,7 @@ import type { Screen } from "@/pages/Index";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Gallery from "./Gallery";
+import { useAuth } from "./AuthContext";
 
 interface DashboardProps {
   onNavigate: (screen: Screen) => void;
@@ -53,6 +54,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
 
   const [extractions, setExtractions] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState('');
+  const user = useAuth();
   
   useEffect(() => {
     fetchExtractions(); // immediate fetch on mount
@@ -62,6 +64,13 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
     
     return () => clearInterval(interval); // cleanup
   }, []);
+
+  useEffect(() => {
+    if (!user){
+      console.log("User is not logged in");
+      onNavigate("landing");
+    }
+  }, [user]);
 
 
   const fetchExtractions = async () => {
@@ -84,24 +93,40 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar onNavigate={onNavigate} currentScreen="dashboard" />
-      
-      <div className="flex-1 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-              <p className="text-gray-600">Manage your video extractions</p>
-            </div>
+<div className="min-h-screen bg-gray-50 flex">
+  <Sidebar onNavigate={onNavigate} currentScreen="dashboard" />
+  
+  <div className="flex-1 p-8">
+    <div className="max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600">Manage your video extractions</p>
+        </div>
+        {selectedCardId && (
+          <div className="flex">
+            <button 
+              className="bg-[#1E3A8A] text-[#F8F8F8] px-4 py-2 rounded-lg transition-colors duration-300 ease-in-out hover:bg-[#F97316]"
+              onClick={() => setSelectedCardId('')}
+            > 
+              Back 
+            </button>
           </div>
-          <button onClick={() => setSelectedCardId('')}> Back </button>
+        )}
+      </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            { !(selectedCardId) ? (
-            extractions && extractions.length > 0 ? 
+      {/* MAIN CONTENT AREA */}
+      {selectedCardId ? (
+        <Gallery id={selectedCardId} />
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {extractions && extractions.length > 0 ? 
             extractions.map((extraction) => (
-              <Card onClick={() => setSelectedCardId(extraction.extraction_id)} key={extraction.extraction_id} className="cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <Card 
+                onClick={() => setSelectedCardId(extraction.extraction_id)} 
+                key={extraction.extraction_id} 
+                className="cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              >
                 <div className="aspect-video bg-gray-200 relative overflow-hidden">
                   <img 
                     src={extraction.thumbnail_path} 
@@ -138,21 +163,22 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
                   </div>
                 </div>
               </Card>
-            )) : <p>No Extractions found</p> ) : (
-            <Gallery id = {selectedCardId} /> )
+            )) 
+            : <p>No Extractions found</p>
           }
-          </div>
         </div>
-      </div>
-
-      {/* Floating Action Button */}
-      <Button
-        onClick={() => onNavigate('extraction')}
-        size="lg"
-        className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg bg-blue-900 hover:bg-orange-500 transition-all duration-300 transform hover:scale-110"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
+      )}
     </div>
+  </div>
+
+  {/* Floating Action Button */}
+  <Button
+    onClick={() => onNavigate('extraction')}
+    size="lg"
+    className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg bg-blue-900 hover:bg-orange-500 transition-all duration-300 transform hover:scale-110"
+  >
+    <Plus className="w-6 h-6" />
+  </Button>
+</div>
   );
 };

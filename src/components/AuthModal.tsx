@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,19 +7,28 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { X } from "lucide-react";
 
+
 interface AuthModalProps {
   onClose: () => void;
   onAuth: () => void;
+  onTabChange: (tab: string) => void;
+  onEmailChange: (tab: string) => void;
+  onPasswordChange: (tab: string) => void;
 }
 
-export const AuthModal = ({ onClose, onAuth }: AuthModalProps) => {
+export const AuthModal = ({ onClose, onAuth, onTabChange, onEmailChange, onPasswordChange }: AuthModalProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [tab, setTab] = useState("signup");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAuth();
   };
+
+  useEffect(() => {
+    console.log(tab);
+  },[tab]);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -38,7 +47,7 @@ export const AuthModal = ({ onClose, onAuth }: AuthModalProps) => {
           <p className="text-gray-600">Create your account or sign in to continue</p>
         </div>
 
-        <Tabs defaultValue="signup" className="w-full">
+        <Tabs defaultValue="signup" onValueChange={(value) => {setTab(value); onTabChange(value);}} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="signup">Create Account</TabsTrigger>
             <TabsTrigger value="login">Log In</TabsTrigger>
@@ -52,7 +61,7 @@ export const AuthModal = ({ onClose, onAuth }: AuthModalProps) => {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {setEmail(e.target.value);onEmailChange(e.target.value)}}
                   placeholder="Enter your email"
                   className="mt-1"
                   required
@@ -64,7 +73,7 @@ export const AuthModal = ({ onClose, onAuth }: AuthModalProps) => {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {setPassword(e.target.value);onPasswordChange(e.target.value)}}
                   placeholder="Create a password"
                   className="mt-1"
                   required
@@ -88,7 +97,7 @@ export const AuthModal = ({ onClose, onAuth }: AuthModalProps) => {
                   id="login-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {setEmail(e.target.value);onEmailChange(e.target.value)}}
                   placeholder="Enter your email"
                   className="mt-1"
                   required
@@ -100,7 +109,7 @@ export const AuthModal = ({ onClose, onAuth }: AuthModalProps) => {
                   id="login-password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {setPassword(e.target.value);onPasswordChange(e.target.value)}}
                   placeholder="Enter your password"
                   className="mt-1"
                   required
