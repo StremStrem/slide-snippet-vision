@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
-import type { Screen } from "@/pages/Index";
+// import type { Screen } from "@/pages/Index";
 import axios from 'axios';
 import { useDebounce } from 'react-use';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -43,6 +43,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FileDropZone from "./ui/FileDropZone";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
 
 
@@ -52,7 +54,7 @@ interface ExtractionFormProps {
   onNavigate: (screen: Screen) => void;
 }
 
-export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
+export const ExtractionForm = () => {
   const [url, setUrl] = useState(""); //Url input by user in form
   const [debouncedUrl, setDebouncedUrl] = useState(url); //Debounced Url input by user in form
   const [enableOCR, setEnableOCR] = useState(true);
@@ -74,10 +76,26 @@ export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
   const [range, setRange] = React.useState([10, videoDuration]); //Detection-based video time range
   const [detectionType, setDetectionType] = React.useState(""); //Detection-based extraction
 
+  //AuthContext stuff
+  const { user } = useAuth();
+  const [userID, setUserID] = useState("");
+
   //debounce url input
   useDebounce(() => {
     setDebouncedUrl(url);
   }, 300, [url]);
+
+  useEffect(() => {
+    console.log("Current user ID: ", user.uid);
+  },[]);
+
+  //set user ID
+   useEffect(() => {
+    if (user) {
+      setUserID(user.uid);
+    }
+  },[]);
+
 
   useEffect(() => {
     setIsLoadingThumbnail(true);
@@ -142,19 +160,12 @@ export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
       setVideoThumbnailUrl('');
     }
   }
-  //--------------------------------------------
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (url.trim()) {
-      onNavigate('progress');
-    }
-  };
 
 //FORM SUBMISSION FUNCTION
   const downloadVideo = e => {
     e.preventDefault(); // ← stops the default form reload
     if (extractionTypeToggle === 'time'){
-    axios.post('http://localhost:3000/session/create', {videoTitle, videoThumbnailUrl, extractionDate, extractionStatus}) //create unique session folder with tmp, frames, and gallery folders
+    axios.post('http://localhost:3000/session/create', {userID, videoTitle, videoThumbnailUrl, extractionDate, extractionStatus}) //create unique session folder with tmp, frames, and gallery folders
     .then(res => {//download video using yt-dlp
       const {sessionID, tmp, frames, gallery} = res.data;
       return axios.post('http://localhost:3000/download/video', { url, sessionID, tmp, frames, gallery}) //{url} shorthand for {url:url}
@@ -182,17 +193,17 @@ export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
     })
   }
 }
-
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar onNavigate={onNavigate} currentScreen="extraction" />
+      <Sidebar />
       
       <div className="flex-1 p-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center mb-8">
             <Button
               variant="ghost"
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => navigate("/dashboard")}
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -449,7 +460,7 @@ export const ExtractionForm = ({ onNavigate }: ExtractionFormProps) => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onNavigate('dashboard')}
+                  onClick={() => navigate("/dashboard")}
                   className="flex-1"
                 >
                   Cancel

@@ -15,7 +15,7 @@ const backendDir = path.resolve(__dirname,"..");
 
 //Create unique session folder, with its own tmp, frames, gallery folders
 router.post('/create', async (req,res) => {
-    const {videoTitle, videoThumbnailUrl, extractionDate, extractionStatus} = req.body;
+    const {userID, videoTitle, videoThumbnailUrl, extractionDate, extractionStatus} = req.body;
     //--------------------
     const video_title = videoTitle;
     const thumbnail_path = videoThumbnailUrl;
@@ -30,7 +30,7 @@ router.post('/create', async (req,res) => {
     const dbRes = await pool.query('UPDATE extraction SET status = $1 WHERE extraction_id = $2', ['processing', sessionID]);
     //--------------------------------
 
-    await updateDatabase(sessionID, video_title, thumbnail_path, date_created, status); //UPDATES LOCAL PSQL DATABASE WITH RELEVANT INFO ON EXTRACTION
+    await updateDatabase(userID, sessionID, video_title, thumbnail_path, date_created, status); //UPDATES LOCAL PSQL DATABASE WITH RELEVANT INFO ON EXTRACTION
 
     const paths = {
         tmp: path.join(sessionDir,"tmp"), //tmp folder stores video mp4s
@@ -45,15 +45,19 @@ router.post('/create', async (req,res) => {
     res.json({sessionID, ...paths}); //return json containing all paths, but before it, insert the sessionID.
 })
 
-const updateDatabase = async (extraction_id, video_title, thumbnail_path, date_created, status) => {
-    const query = `INSERT INTO extraction (video_title, thumbnail_path, date_created, status, extraction_id) VALUES ($1, $2, $3, $4, $5) RETURNING *`;
-    const values = [video_title, thumbnail_path, date_created, status, extraction_id,]
+const updateDatabase = async (user_id, extraction_id, video_title, thumbnail_path, date_created, status) => {
+    const query = `INSERT INTO extraction (userid, video_title, thumbnail_path, date_created, status, extraction_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`;
+    const values = [user_id, video_title, thumbnail_path, date_created, status, extraction_id,]
     const dbRes = await pool.query(query, values);
 }
 
 router.get('/get-sessions', async (req,res) => {
     try{
-        const result = await pool.query('SELECT * FROM extraction ORDER BY date_created DESC');
+        const { userID } = req.query;
+        const result = await pool.query(
+            'SELECT * FROM extraction WHERE userid = $1 ORDER BY date_created DESC',
+            [userID]
+        );
         res.json(result.rows);
     } catch (err) {
         console.error('Error fetching extractions: ', err);

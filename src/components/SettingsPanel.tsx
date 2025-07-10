@@ -5,23 +5,24 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Edit, CreditCard, LogOut, ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
-import type { Screen } from "@/pages/Index";
+import { useNavigate } from "react-router-dom";
 
 interface SettingsPanelProps {
   onNavigate: (screen: Screen) => void;
 }
 
-export const SettingsPanel = ({ onNavigate }: SettingsPanelProps) => {
+export const SettingsPanel = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar onNavigate={onNavigate} currentScreen="settings" />
+      <Sidebar />
       
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center mb-8">
             <Button
               variant="ghost"
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => navigate("/settings")}
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -112,7 +113,7 @@ export const SettingsPanel = ({ onNavigate }: SettingsPanelProps) => {
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => onNavigate('landing')}
+                  onClick={() => navigate("/")}
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Log Out

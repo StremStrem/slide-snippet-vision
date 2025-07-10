@@ -11,12 +11,15 @@ import {getAuth, onAuthStateChanged, User, signOut} from "firebase/auth";
 import {auth} from "../src/lib/firebase";
 import { AuthProvider } from "./components/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Dashboard } from "./components/Dashboard";
+import { LandingPage } from "./components/LandingPage";
+import { ExtractionForm } from "./components/ExtractionForm";
+import { SettingsPanel } from "./components/SettingsPanel";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
-
 
   return (
   <AuthProvider>
@@ -26,7 +29,11 @@ const App = () => {
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/extractions" element={<ProtectedRoute><ExtractionForm /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPanel /></ProtectedRoute>} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

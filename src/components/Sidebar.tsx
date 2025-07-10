@@ -1,25 +1,23 @@
-
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Home, Play, Settings, HelpCircle, ChevronDown } from "lucide-react";
-import type { Screen } from "@/pages/Index";
+import { useAuth } from './AuthContext';
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { AuthProvider, useAuth } from './AuthContext';
-import { useContext } from "react";
-
-interface SidebarProps {
-  onNavigate: (screen: Screen) => void;
-  currentScreen: Screen;
-}
-
-export const Sidebar = ({ onNavigate, currentScreen }: SidebarProps) => {
+export const Sidebar = () => {
   const { user, logOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // Map your "screens" to paths
   const navItems = [
-    { id: 'dashboard' as Screen, label: 'Home', icon: Home },
-    { id: 'extraction' as Screen, label: 'Extractions', icon: Play },
-    { id: 'settings' as Screen, label: 'Settings', icon: Settings },
+    { id: 'dashboard', label: 'Home', icon: Home, path: '/dashboard' },
+    { id: 'extraction', label: 'Extractions', icon: Play, path: '/extractions' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
+
+  // Determine currentScreen by pathname
+  const currentScreen = navItems.find(item => location.pathname.startsWith(item.path))?.id || 'dashboard';
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -45,7 +43,7 @@ export const Sidebar = ({ onNavigate, currentScreen }: SidebarProps) => {
                   ? "bg-blue-50 text-blue-900 border-blue-200" 
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => navigate(item.path)}
             >
               <item.icon className="w-4 h-4 mr-3" />
               {item.label}

@@ -2,13 +2,54 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Play, Download, Search, Zap, Video, File, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { AuthModal } from "./AuthModal";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
-interface LandingPageProps {
-  onGetStarted: () => void; //tells Typescript this is a function that returns nothing
-}
 
-export const LandingPage = ({ onGetStarted }: LandingPageProps) => { //onGetStarted function is defined elsewhere and passed as prop.
+
+export const LandingPage = () => { //() => navigate("/dashboard") function is defined elsewhere and passed as prop.
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+   const [authTab, setAuthTab] = useState("signup");
+
+  const navigate = useNavigate();
+  const handleGetStarted = () => {
+    if (auth.currentUser) {
+      navigate("/dashboard");
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+    const handleAuth = async () => {
+      // Handle user login/signup
+      try {
+        if (authTab === "signup") {
+          console.log(email);
+          console.log(password);
+          console.log("Creating account...");
+          await createUserWithEmailAndPassword(auth, email, password);
+          setShowAuthModal(false);
+        } else if (authTab === "login") {
+          await signInWithEmailAndPassword(auth, email, password);
+          console.log(email);
+          console.log(password);
+          console.log("Logging in...");
+          navigate("/dashboard");
+          setShowAuthModal(false);
+        }
+      } catch (err) {
+        console.log(email);
+        console.log(password);
+        console.log("failed to signup or login:", err);
+      }
+    };
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Header */}
       <header className="sticky top-0 bg-white/90 backdrop-blur-sm border-b border-gray-200 z-40">
@@ -29,7 +70,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => { //onGetStar
                 Sign In
               </Button>
               <Button 
-                onClick={onGetStarted}
+                onClick={handleGetStarted}
                 className="bg-gradient-to-r from-blue-900 to-blue-700 hover:from-orange-500 hover:to-orange-400 transition-all shadow-md"
               >
                 Get Started
@@ -59,7 +100,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => { //onGetStar
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
-                onClick={onGetStarted}
+                onClick={handleGetStarted}
                 size="lg"
                 className="bg-gradient-to-r from-blue-900 to-blue-700 hover:from-orange-500 hover:to-orange-400 text-white px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg"
               >
@@ -288,7 +329,7 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => { //onGetStar
               Join thousands of educators and professionals saving hours with automated slide extraction
             </p>
             <Button 
-              onClick={onGetStarted}
+              onClick={handleGetStarted}
               size="lg"
               className="bg-gradient-to-r from-orange-500 to-orange-400 hover:from-white hover:to-white hover:text-orange-500 text-white px-8 py-6 text-lg rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg"
             >
@@ -329,5 +370,16 @@ export const LandingPage = ({ onGetStarted }: LandingPageProps) => { //onGetStar
         </div>
       </footer>
     </div>
+    
+    {showAuthModal && (
+            <AuthModal
+              onClose={() => setShowAuthModal(false)}
+              onAuth={handleAuth}
+              onTabChange={setAuthTab}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+            />
+          )}
+    </>
   );
 };

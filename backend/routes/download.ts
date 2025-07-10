@@ -30,7 +30,7 @@ router.post('/video', async (req, res) => {
     const videoPath = path.join(tmp, "video.mp4");
 
 
-    exec(`yt-dlp --remux-video mp4 -S "res:720,codec:h264" -o "${videoPath}" ${videoUrl}`, async (error, stdout, stderr) => {  //download youtube video into temp storage //-f mp4 (--format mp4) forces .mp4 extension
+    exec(`yt-dlp --remux-video mp4 -S "res:720,codec:h264" -o "${videoPath}" "${videoUrl}"`, async (error, stdout, stderr) => {  //download youtube video into temp storage //-f mp4 (--format mp4) forces .mp4 extension
         if (error) {
             //If ytp fails, send error response
             console.error('yt-dlp error:', error.message);
