@@ -165,31 +165,31 @@ export const ExtractionForm = () => {
   const downloadVideo = e => {
     e.preventDefault(); // ← stops the default form reload
     if (extractionTypeToggle === 'time'){
-    axios.post('http://localhost:3000/session/create', {userID, videoTitle, videoThumbnailUrl, extractionDate, extractionStatus}) //create unique session folder with tmp, frames, and gallery folders
+    axios.post('https://slide-snip-backend.onrender.com/session/create', {userID, videoTitle, videoThumbnailUrl, extractionDate, extractionStatus}) //create unique session folder with tmp, frames, and gallery folders
     .then(res => {//download video using yt-dlp
       const {sessionID, tmp, frames, gallery} = res.data;
-      return axios.post('http://localhost:3000/download/video', { url, sessionID, tmp, frames, gallery}) //{url} shorthand for {url:url}
+      return axios.post('https://slide-snip-backend.onrender.com/download/video', { url, sessionID, tmp, frames, gallery}) //{url} shorthand for {url:url}
     })
     .then(async (res) => {//extract frames at given interval
       const {sessionID, tmp, frames, gallery} = res.data;
-      return await axios.post('http://localhost:3000/video/extract', {sessionID, tmp, frames, gallery, videoStart, videoEnd, frameInterval})
+      return await axios.post('https://slide-snip-backend.onrender.com/video/extract', {sessionID, tmp, frames, gallery, videoStart, videoEnd, frameInterval})
     })
     .then(async (res) => {//carry out smart filtering of frames into gallery
       const {sessionID, tmp, frames, gallery} = res.data;
-      return await axios.post('http://localhost:3000/video/filter', {sessionID, tmp, frames, gallery});
+      return await axios.post('https://slide-snip-backend.onrender.com/video/filter', {sessionID, tmp, frames, gallery});
     })
     .catch(err => console.error(err));
 
     //EXTRACTION TYPE DETECTION
   } else if (extractionTypeToggle === 'detection') {
-    axios.post('http://localhost:3000/session/create', {videoTitle, videoThumbnailUrl, extractionDate, extractionStatus})
+    axios.post('https://slide-snip-backend.onrender.com/session/create', {videoTitle, videoThumbnailUrl, extractionDate, extractionStatus})
     .then(res => {
       const {sessionID, tmp, frames, gallery} = res.data;
-      return axios.post('http://localhost:3000/download/video', { url, sessionID, tmp, frames, gallery}) //{url} shorthand for {url:url}
+      return axios.post('https://slide-snip-backend.onrender.com/download/video', { url, sessionID, tmp, frames, gallery}) //{url} shorthand for {url:url}
     })
     .then(async res => {
       const {sessionID, tmp, frames, gallery} = res.data;
-      return await axios.post('http://localhost:3000/video/filter-scene-detection', {sessionID, detectionType, tmp, gallery}) //Extract based on detection type selected
+      return await axios.post('https://slide-snip-backend.onrender.com/video/filter-scene-detection', {sessionID, detectionType, tmp, gallery}) //Extract based on detection type selected
     })
   }
 }
