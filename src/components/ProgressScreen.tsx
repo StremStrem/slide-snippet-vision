@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle, ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
-import type { Screen } from "@/pages/Index";
 
 interface ProgressScreenProps {
   onNavigate: (screen: Screen) => void;
@@ -74,7 +73,7 @@ export const ProgressScreen = ({ onNavigate }: ProgressScreenProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar onNavigate={onNavigate} currentScreen="extraction" />
+      <Sidebar />
       
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
@@ -82,7 +81,6 @@ export const ProgressScreen = ({ onNavigate }: ProgressScreenProps) => {
             <div className="flex items-center">
               <Button
                 variant="ghost"
-                onClick={() => onNavigate('dashboard')}
                 className="mr-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -92,7 +90,6 @@ export const ProgressScreen = ({ onNavigate }: ProgressScreenProps) => {
             
             {isComplete && (
               <Button
-                onClick={() => onNavigate('results')}
                 className="bg-blue-900 hover:bg-orange-500 transition-colors"
               >
                 View Results

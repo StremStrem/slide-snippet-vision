@@ -8,7 +8,7 @@ const Gallery = ({ id }) => {
 
     useEffect( () => {
         const fetchGallery = async () => {
-            const res = await axios.get('http://localhost:3000/session/get-gallery', {params:{id}});
+            const res = await axios.get('https://slide-snip-backend.onrender.com/session/get-gallery', {params:{id}});
             console.log(res.data.frames);
             setGallery(res.data.frames);
         }
@@ -26,7 +26,7 @@ const Gallery = ({ id }) => {
         <Card key={frame} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
           <div className="aspect-video bg-gray-200 relative overflow-hidden">
             <img 
-              src={`http://localhost:3000/static/sessions/${id}/gallery/${frame}`}
+              src={`https://slide-snip-backend.onrender.com/static/sessions/${id}/gallery/${frame}`}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">

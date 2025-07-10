@@ -42,7 +42,7 @@ export const Dashboard = () => {
   }, [user]);
 
   const fetchExtractions = async () => {
-    const res = await axios.get('http://localhost:3000/session/get-sessions', {
+    const res = await axios.get('https://slide-snip-backend.onrender.com/session/get-sessions', {
       params: { userID }
     });
     setExtractions(res.data);

@@ -11,7 +11,7 @@ import uploadRoutes from './routes/upload.js';
 
 const app = express();
 app.use(express.json()); //Lets server read JSON data
-app.use(cors({ origin: 'http://localhost:8080' }));
+app.use(cors({ origin: 'https://slide-snippet-vision.onrender.com' }));
 
 app.use('/download', downloadRoutes);
 app.use('/video', extractRoutes);
